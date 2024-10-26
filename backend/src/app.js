@@ -1,15 +1,19 @@
 import express from "express";
+
 import { body, validationResult } from "express-validator";
+import jwt from "jsonwebtoken";
 
 const app = express();
+
 app.use(express.json());
 const PORT = 5000;
+const JWT_Secret = "secretkey";
 
 let db = [
   {
     user: "aditya",
     pass: "12345678",
-    token: "2349343kkaduakdae",
+    id: null,
   },
 ];
 
@@ -30,7 +34,7 @@ app.post(
   "/api/signup",
   body("user").isEmpty().isLength({ max: 3, min: 10 }),
   body("pass").isEmpty().isLength({ max: 8, min: 20 }),
-  (req, res) => {
+  async (req, res) => {
     const result = validationResult(req);
     const { user, pass } = req.body;
 
@@ -68,13 +72,16 @@ app.post(
         error: result.array(),
       });
     } else {
+      const token = jwt.sign({ user }, JWT_Secret, {
+        expiresIn: "1h",
+      });
       const findUser = db.find((u) => user == u.user && pass == u.pass);
       if (findUser) {
         return res.send({
           msg: "user  fetched  ",
           name: user,
           password: pass,
-          token: "aidfjieijadkjfdaj433434",
+          token: token,
         });
       } else {
         res.json({
